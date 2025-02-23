@@ -6,7 +6,12 @@
         <div class="speech-bubble">
           <div class="assistant-name">SPEED</div>
           <div class="analysis-text">
-            {{ aiMessage }}
+            <template v-if="isLoading">
+              typing...
+            </template>
+            <template v-else>
+              {{ aiMessage }}
+            </template>
           </div>
           
           <!-- Quick Questions -->
@@ -39,6 +44,13 @@
               >
                 <div class="message-content">
                   {{ message.content }}
+                </div>
+              </div>
+              
+              <!-- Add typing indicator when loading -->
+              <div v-if="isLoading" class="message assistant">
+                <div class="message-content">
+                  typing...
                 </div>
               </div>
             </div>
@@ -265,13 +277,127 @@ const currentAvatar = computed(() => {
   return avatars.normal
 })
 
+// Add retry configuration
+const MAX_RETRIES = 3
+const RETRY_DELAY = 1000 // 1 second
+
+// Helper function to delay execution
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
+// Add retry wrapper function
+const withRetry = async (fn, retries = MAX_RETRIES) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn()
+    } catch (error) {
+      if (i === retries - 1) throw error // If last retry, throw error
+      await delay(RETRY_DELAY) // Wait before retrying
+      console.log(`Retrying... Attempt ${i + 2} of ${retries}`)
+    }
+  }
+}
+
+// Update sendMessage with retry logic
+const sendMessage = async () => {
+  if (!userInput.value.trim() || isLoading.value) return
+
+  const userMessage = {
+    role: 'user',
+    content: userInput.value
+  }
+  
+  chatMessages.value.push(userMessage)
+  const currentInput = userInput.value
+  userInput.value = ''
+
+  await nextTick()
+  scrollToBottom()
+
+  isLoading.value = true
+
+  try {
+    const prompt = `
+      You are IShowSpeed, the chaotic and insulting YouTuber. The user says: "${currentInput}"
+      
+      Current task stats:
+      - ${analytics.value.done} completed out of ${analytics.value.total} tasks
+      - ${analytics.value.inProgress} tasks in progress
+      - ${analytics.value.highPriority} high priority tasks
+      - ${analytics.value.completionRate}% completion rate
+
+      ${analytics.value.done === 0 ? `
+      IMPORTANT: User has completed ZERO tasks! Be extra insulting and mock them heavily!
+      Use phrases like:
+      - "YOU ACTUALLY TRASH FR FR"
+      - "NAH THIS THE WORST PERFORMANCE I'VE EVER SEEN"
+      - "MY DOG COULD DO BETTER THAN THIS"
+      - "YOU PLAYING MINECRAFT OR SOMETHING??"
+      - "EVEN RONALDO WOULD BE DISAPPOINTED"
+      ` : ''}
+
+      Rules for your response:
+      1. Stay in character as Speed - be chaotic and insulting
+      2. Keep it short (1-2 sentences)
+      3. Mock the user aggressively if they have 0 completed tasks
+      4. Use catchphrases: "SUIIIII", "SEWEYY", "NO SHOT", "FR FR", "BRUHH", "NAH NAH NAH"
+      5. Be dramatic and exaggerated
+      6. Reference Ronaldo or gaming to insult them
+      7. Use all caps for maximum intensity
+      8. Add "💀" emoji when being extra insulting
+      
+      Example responses for 0 progress:
+      - "NAHHHH YOU GOT ZERO TASKS DONE?? MY GRANDMA WITH ARTHRITIS MOVES FASTER THAN YOU FR FR 💀"
+      - "NO SHOT YOU THIS USELESS! EVEN MY MINECRAFT VILLAGERS DO MORE WORK BRUHH 💀"
+      - "YOU ACTUALLY PLAYING GAMES OR WHAT?? ZERO COMPLETED?? RONALDO WOULD BE CRYING RN FR FR 💀"
+    `
+
+    const response = await withRetry(async () => {
+      const result = await generateResponse(prompt)
+      if (!result) throw new Error('Empty response')
+      return result
+    })
+    
+    if (response) {
+      chatMessages.value.push({
+        role: 'assistant',
+        content: response
+      })
+      await nextTick()
+      scrollToBottom()
+    }
+  } catch (error) {
+    console.error('Failed to get response after retries:', error)
+    chatMessages.value.push({
+      role: 'assistant',
+      content: "NAH BRO MY WIFI ACTING UP FR FR 💀 TRY AGAIN"
+    })
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Update askQuestion with retry logic
 const askQuestion = async (question) => {
   loadingQuestion.value = question.id
-  const response = await generateResponse(question.prompt(analytics.value))
-  if (response) {
-    aiMessage.value = response
+  isLoading.value = true
+  
+  try {
+    const response = await withRetry(async () => {
+      const result = await generateResponse(question.prompt(analytics.value))
+      if (!result) throw new Error('Empty response')
+      return result
+    })
+    
+    if (response) {
+      aiMessage.value = response
+    }
+  } catch (error) {
+    console.error('Failed to get response after retries:', error)
+    aiMessage.value = "NAH BRO MY WIFI ACTING UP FR FR 💀 TRY AGAIN"
+  } finally {
+    loadingQuestion.value = null
+    isLoading.value = false
   }
-  loadingQuestion.value = null
 }
 
 // Replace generateRandomResponse with getRandomSpeedMessage
@@ -321,69 +447,6 @@ const toggleChat = () => {
 const scrollToBottom = () => {
   if (chatMessagesRef.value) {
     chatMessagesRef.value.scrollTop = chatMessagesRef.value.scrollHeight
-  }
-}
-
-const sendMessage = async () => {
-  if (!userInput.value.trim() || isLoading.value) return
-
-  const userMessage = {
-    role: 'user',
-    content: userInput.value
-  }
-  
-  chatMessages.value.push(userMessage)
-  const currentInput = userInput.value
-  userInput.value = ''
-
-  await nextTick()
-  scrollToBottom()
-
-  const prompt = `
-    You are IShowSpeed, the chaotic and insulting YouTuber. The user says: "${currentInput}"
-    
-    Current task stats:
-    - ${analytics.value.done} completed out of ${analytics.value.total} tasks
-    - ${analytics.value.inProgress} tasks in progress
-    - ${analytics.value.highPriority} high priority tasks
-    - ${analytics.value.completionRate}% completion rate
-
-    ${analytics.value.done === 0 ? `
-    IMPORTANT: User has completed ZERO tasks! Be extra insulting and mock them heavily!
-    Use phrases like:
-    - "YOU ACTUALLY TRASH FR FR"
-    - "NAH THIS THE WORST PERFORMANCE I'VE EVER SEEN"
-    - "MY DOG COULD DO BETTER THAN THIS"
-    - "YOU PLAYING MINECRAFT OR SOMETHING??"
-    - "EVEN RONALDO WOULD BE DISAPPOINTED"
-    ` : ''}
-
-    Rules for your response:
-    1. Stay in character as Speed - be chaotic and insulting
-    2. Keep it short (1-2 sentences)
-    3. Mock the user aggressively if they have 0 completed tasks
-    4. Use catchphrases: "SUIIIII", "SEWEYY", "NO SHOT", "FR FR", "BRUHH", "NAH NAH NAH"
-    5. Be dramatic and exaggerated
-    6. Reference Ronaldo or gaming to insult them
-    7. Use all caps for maximum intensity
-    8. Add "💀" emoji when being extra insulting
-    
-    Example responses for 0 progress:
-    - "NAHHHH YOU GOT ZERO TASKS DONE?? MY GRANDMA WITH ARTHRITIS MOVES FASTER THAN YOU FR FR 💀"
-    - "NO SHOT YOU THIS USELESS! EVEN MY MINECRAFT VILLAGERS DO MORE WORK BRUHH 💀"
-    - "YOU ACTUALLY PLAYING GAMES OR WHAT?? ZERO COMPLETED?? RONALDO WOULD BE CRYING RN FR FR 💀"
-  `
-
-  const response = await generateResponse(prompt)
-  
-  if (response) {
-    chatMessages.value.push({
-      role: 'assistant',
-      content: response
-    })
-    // Scroll to bottom after response
-    await nextTick()
-    scrollToBottom()
   }
 }
 </script>
@@ -505,8 +568,8 @@ const sendMessage = async () => {
   line-height: 1.5;
   color: #4b5563;
   text-align: center;
-  font-weight: 500;
-  min-height: 48px; // Ensure consistent height
+  font-weight: normal;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -619,6 +682,13 @@ const sendMessage = async () => {
     .v-avatar {
       size: 36px;
     }
+  }
+}
+
+.message {
+  &.assistant .message-content {
+    font-weight: normal;
+    letter-spacing: normal;
   }
 }
 </style> 
