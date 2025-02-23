@@ -140,12 +140,15 @@ const handleNumpadInput = (key) => {
 }
 
 const confirmAmount = () => {
+  const selectedCategoryObj = currentCategories.value.find(c => c.id === selectedCategory.value)
+  
   emit('confirm', {
     amount: Number(currentAmount.value),
     type: props.transactionType,
-    category: selectedCategory.value
+    category: selectedCategoryObj?.name || 'Other'
   })
   currentAmount.value = ''
+  selectedCategory.value = null
 }
 </script>
 

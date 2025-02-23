@@ -43,6 +43,9 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useStorage } from '../composables/useStorage'
+
+const { addTransaction } = useStorage()
 
 const showNumpad = ref(false)
 const transactionType = ref('expense')
@@ -52,8 +55,12 @@ const openNumpad = (type) => {
   showNumpad.value = true
 }
 
-const handleExpenseConfirm = ({ amount, type }) => {
-  // TODO: Handle the expense/income addition
+const handleExpenseConfirm = ({ amount, type, category }) => {
+  addTransaction({
+    amount,
+    type,
+    category: category?.name || 'Other',
+  })
   showNumpad.value = false
 }
 </script>
