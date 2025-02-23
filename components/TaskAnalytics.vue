@@ -60,10 +60,13 @@ const isVisible = ref(true)
 
 // Avatar URLs for different moods
 const avatars = {
-  angry: "https://image-cdn.essentiallysports.com/wp-content/uploads/IShowSpeed-4-640x640.png",
-  happy: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRscA_F7YdntUrC2Dkc-kE845pkKkZZT6tnrA&s",
-  normal: "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/07ed52f9-65de-4d91-afc1-6d9594f0de81/dgrlexe-c422f5f4-26f5-4cce-a070-13bfb07b4638.png/v1/fill/w_1044,h_766,q_70,strp/i_show_speed__1_by_mrorlandomagicfan200_dgrlexe-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9OTE0IiwicGF0aCI6IlwvZlwvMDdlZDUyZjktNjVkZS00ZDkxLWFmYzEtNmQ5NTk0ZjBkZTgxXC9kZ3JsZXhlLWM0MjJmNWY0LTI2ZjUtNGNjZS1hMDcwLTEzYmZiMDdiNDYzOC5wbmciLCJ3aWR0aCI6Ijw9MTI0NiJ9XV0sImF1ZCI6WyJ1cm46c2VydmljZTppbWFnZS5vcGVyYXRpb25zIl19.GBdiBzg385vvRL0tYuF_tzoJ62uLdbom2kMvw_AFPNE",
-  sad: "https://www.indiatimes.com/entertainment/bollywood/american-youtuber-ishowspeed-reacts-to-jawans-trailer-calls-it-new-avengers-movie-609009.html"
+  angry: "https://media.tenor.com/g9j6VtTvQf4AAAAM/speed.gif",
+  'very_angry':"https://gifdb.com/images/high/ishowspeed-showing-teeth-while-looking-d0b1xsvxqm9fnz30.gif",
+  happy: "https://gifdb.com/images/high/ishowspeed-gif-file-8403kb-e1xcdhsa8snp5fhy.gif",
+  normal: "https://gifdb.com/images/high/ishowspeed-gif-file-3836kb-19jubjr1fmw8s2cc.gif",
+  sad: "https://www.indiatimes.com/entertainment/bollywood/american-youtuber-ishowspeed-reacts-to-jawans-trailer-calls-it-new-avengers-movie-609009.html",
+  surprised: "https://media0.giphy.com/media/lxxOGaDRk4f7R5TkBd/200w.gif?cid=6c09b952p8wg2l73ceh9qdnajr9n3yrzievbpufjlmo6fnqz&ep=v1_gifs_search&rid=200w.gif&ct=g",
+  "sui":"https://media.tenor.com/vgQ373N5YtsAAAAM/speed-ishowspeed.gif"
 }
 
 // Determine avatar based on analytics
@@ -163,7 +166,42 @@ const generateMessage = () => {
 
     `${analytics.value.highPriority > 0 && analytics.value.inProgress === 0 ? 
       "you see these priority tasks and doing nothing... why you doing this to me bro... 😢" : 
-      "THAT'S MORE LIKE IT! KEEP WORKING! 🔥"}`
+      "THAT'S MORE LIKE IT! KEEP WORKING! 🔥"}`,
+
+    // Very angry Speed reactions
+    `${analytics.value.completionRate < 10 ? 
+      "NAH NAH NAH! THIS AIN'T IT! *SPEED DEMON MODE ACTIVATED* 👿 DO YOUR TASKS OR ELSE!! GRRRRR!" : 
+      "YOU BETTER KEEP WORKING BEFORE I GET MAD FR! 😤"}`,
+
+    // Surprised Speed reactions
+    `${analytics.value.done > analytics.value.total * 0.8 ? 
+      "YOOO! YOU ACTUALLY DID THAT?! I'M SHOOK! 😱 SPEED IS PROUD OF YOU!" : 
+      "BRO WHAT?! HOW YOU STILL NOT DONE?! 😱"}`,
+
+    // SUI Speed reactions
+    `${analytics.value.completionRate > 90 ? 
+      "SIUUUUUUUU! YOU'RE ACTUALLY GOATED! CRISTIANO RONALDO WOULD BE PROUD! ⚽️🐐" : 
+      "NOT QUITE SIUUU WORTHY YET! KEEP PUSHING! ⚽️"}`,
+
+    // Normal Speed encouragement
+    `SPEED CHECKING IN! ${analytics.value.inProgress > 2 ? 
+      "YOU GOING CRAZY WITH THE MULTITASKING! I SEE YOU! 👀" : 
+      "WHY YOU MOVING SO SLOW TODAY?! PICK UP THE PACE! 🏃‍♂️"}`,
+
+    // Very angry when high priority tasks pile up
+    `${analytics.value.highPriority > 5 ? 
+      "BRO I'M ACTUALLY BOUT TO LOSE IT! ${analytics.value.highPriority} HIGH PRIORITY?! *SPEED RAGE MODE* 🤬🔥" : 
+      "KEEP THEM PRIORITIES IN CHECK! YOU DON'T WANT TO SEE ME MAD! 😤"}`,
+
+    // Surprised at quick progress
+    `${analytics.value.done > analytics.value.total * 0.5 && analytics.value.inProgress > 2 ? 
+      "HOLD UP! YOU MOVING TOO FAST! SPEED CAN'T EVEN KEEP UP! 😱🏃‍♂️" : 
+      "WHY CAN'T YOU MOVE THIS FAST ALL THE TIME?! 🤔"}`,
+
+    // SUI celebration for completed tasks
+    `${analytics.value.done === analytics.value.total ? 
+      "SIUUUUUUU! SIUUUUUUU! DOUBLE SIUUUUUUU! 🐐⚽️🐐 SPEED AND CR7 PROUD OF YOU!" : 
+      "NOT ENOUGH SIUUU ENERGY! NEED MORE COMPLETED TASKS! ⚽️"}`
   ]
   
   return messages[Math.floor(Math.random() * messages.length)]
