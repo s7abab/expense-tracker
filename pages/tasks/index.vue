@@ -103,29 +103,50 @@
                       class="task-card"
                       :class="{ 'on-hover': isHovering }"
                     >
-                      <v-card-text class="pa-3">
-                        <div class="d-flex justify-space-between align-center">
-                          <div class="text-subtitle-1 text-truncate">{{ task.title }}</div>
-                          <v-icon
-                            v-if="isHovering"
+                      <v-card-text class="pa-4">
+                        <!-- Priority Strip -->
+                        <div 
+                          class="priority-strip" 
+                          :class="`priority-${task.priority?.toLowerCase() || 'medium'}`"
+                        ></div>
+
+                        <!-- Title and Priority -->
+                        <div class="d-flex justify-space-between align-center mb-3">
+                          <div class="text-subtitle-1 font-weight-medium text-truncate">
+                            {{ task.title }}
+                          </div>
+                          <v-chip
                             size="small"
-                            class="ms-2"
-                            color="grey"
+                            :color="getPriorityColor(task.priority)"
+                            class="priority-chip"
+                            variant="tonal"
+                            @click.stop="togglePriority(task)"
                           >
-                            mdi-drag
-                          </v-icon>
+                            <v-icon 
+                              size="14" 
+                              start 
+                              class="me-1"
+                            >
+                              mdi-flag
+                            </v-icon>
+                            {{ task.priority || 'Medium' }}
+                          </v-chip>
                         </div>
-                        <div class="mt-1 d-flex align-center">
-                          <v-icon
-                            size="14"
-                            :color="column.color"
-                            class="me-1"
-                          >
-                            mdi-clock-outline
-                          </v-icon>
-                          <span class="text-caption text-medium-emphasis">
-                            {{ formatDate(task.createdAt) }}
-                          </span>
+
+                        <!-- Date and Actions -->
+                        <div class="d-flex justify-space-between align-center">
+                          <div class="d-flex align-center">
+                            <v-icon
+                              size="16"
+                              :color="getPriorityColor(task.priority)"
+                              class="me-2"
+                            >
+                              mdi-clock-outline
+                            </v-icon>
+                            <span class="text-caption text-medium-emphasis">
+                              {{ formatDate(task.createdAt) }}
+                            </span>
+                          </div>
                         </div>
                       </v-card-text>
                     </v-card>
@@ -152,6 +173,8 @@ const newTaskColumn = ref(null)
 const quickTask = ref({
   title: '',
 })
+
+const priorities = ['High', 'Medium', 'Low']
 
 const columns = [
   { 
@@ -201,9 +224,9 @@ const saveQuickTask = () => {
       title: quickTask.value.title,
       status: newTaskColumn.value,
       createdAt: new Date().toISOString(),
+      priority: 'Medium', // Default priority
     })
     
-    // Scroll to top after adding new task
     if (tasksListRef.value) {
       tasksListRef.value.scrollTop = 0
     }
@@ -229,6 +252,24 @@ const formatDate = (dateString) => {
     Math.ceil((date - new Date()) / (1000 * 60 * 60 * 24)),
     'day'
   )
+}
+
+const getPriorityColor = (priority) => {
+  const colors = {
+    High: 'error',
+    Medium: 'warning',
+    Low: 'success'
+  }
+  return colors[priority] || 'grey'
+}
+
+const togglePriority = (task) => {
+  const currentIndex = priorities.indexOf(task.priority || 'Medium')
+  const nextIndex = (currentIndex + 1) % priorities.length
+  updateTask({ 
+    ...task, 
+    priority: priorities[nextIndex] 
+  })
 }
 </script>
 
@@ -332,13 +373,69 @@ const formatDate = (dateString) => {
 
 .task-card {
   width: 100%;
-  border-radius: 12px;
-  transition: all 0.3s ease;
+  border-radius: 16px;
+  transition: all 0.2s ease;
   background: white;
-  margin: 0; /* Remove margin */
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
   
   &.on-hover {
     transform: translateY(-2px);
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .priority-strip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    
+    &.priority-high {
+      background: linear-gradient(to right, #ef4444, #dc2626);
+    }
+    
+    &.priority-medium {
+      background: linear-gradient(to right, #f59e0b, #d97706);
+    }
+    
+    &.priority-low {
+      background: linear-gradient(to right, #22c55e, #16a34a);
+    }
+  }
+
+  .priority-chip {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 0 12px;
+    height: 24px !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  .drag-handle {
+    cursor: move;
+  }
+
+  .v-btn {
+    opacity: 0.9;
+    
+    &:hover {
+      opacity: 1;
+      transform: scale(1.05);
+    }
   }
 }
 
@@ -391,6 +488,13 @@ const formatDate = (dateString) => {
   :deep(.v-chip__content) {
     opacity: 1;
   }
+}
+
+.text-truncate {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 600px) {
