@@ -2,12 +2,12 @@
   <v-card class="analytics-card">
     <div class="ai-assistant">
       <v-avatar
-        image="https://cdn3d.iconscout.com/3d/premium/thumb/ai-robot-assistant-9749582-7929895.png"
+        image="https://yt3.googleusercontent.com/ytc/AIf8zZTNiXkXpDYBl1MtK3mT3ypGgvMkHHlgLfTaIwNY=s176-c-k-c0x00ffffff-no-rj"
         size="48"
         class="assistant-avatar"
       />
       <div class="message-bubble">
-        <div class="assistant-name">Luna AI</div>
+        <div class="assistant-name">SPEED</div>
         <div class="analysis-text">
           {{ currentMessage }}
         </div>
@@ -47,15 +47,48 @@ const analytics = computed(() => {
 // Generate different messages based on analytics
 const generateMessage = () => {
   const messages = [
-    `You have completed ${analytics.value.done} out of ${analytics.value.total} tasks (${analytics.value.completionRate}%). ${
-      analytics.value.completionRate > 70 ? "That's impressive! 🌟" : "Keep pushing forward! 💪"
-    }`,
-    `${analytics.value.highPriority} high-priority tasks need attention. ${
-      analytics.value.inProgress ? "I see you're actively working on some of them!" : "Let's tackle them one by one!"
-    }`,
-    `${analytics.value.inProgress} tasks in progress. ${
-      analytics.value.inProgress > 3 ? "Remember to focus on one thing at a time! 🎯" : "Great focus management! ✨"
-    }`
+    // Angry Speed reactions (when tasks aren't getting done)
+    `BRUHHH ${analytics.value.completionRate < 20 ? "YOU ONLY AT ${analytics.value.completionRate}%?! I'M BOUT TO LOSE IT FR FR! 🤬 GET YO LAZY SELF UP! SEWEY!" : 
+      "KEEP GRINDIN' YOU ALMOST THERE! 💪"}`,
+
+    `${analytics.value.highPriority > 3 ? 
+      "NAHHHH THIS IS ACTUALLY MAKING ME MAD MAD! ${analytics.value.highPriority} HIGH PRIORITY?! DO SOMETHING RN! 🤬" : 
+      "AIGHT BET, YOU HANDLING THEM PRIORITIES! SUIIIII! 🐐"}`,
+
+    // Happy/Excited Speed reactions (for good progress)
+    `${analytics.value.done > 3 ? 
+      "YESSIR! YOU GOING STUPID WITH IT! ${analytics.value.done} TASKS CLEARED! CRISTIANO RONALDO! SEWEYYYY! ⚽️🔥" : 
+      "MY GRANDMA WORK FASTER THAN THIS BRO! 💀"}`,
+
+    // Normal Speed reactions (general updates)
+    `${analytics.value.inProgress ? 
+      `YOU GOT ${analytics.value.inProgress} TASKS IN THE COOKER! THAT'S WHAT I LIKE TO SEE! WHO'S THE BEST?! SPEED! 🏃‍♂️` : 
+      "BRO REALLY SITTING HERE DOING NOTHING! I CAN'T WITH YOU! 😭"}`,
+
+    // Classic Speed catchphrases
+    `${analytics.value.total === 0 ? 
+      "SPEED HERE! AND TODAY... BRO WHERE ARE THE TASKS AT?! ARE YOU SERIOUS RN?! 😤" :
+      `${analytics.value.completionRate}% COMPLETE! ${analytics.value.completionRate > 50 ? "SIUUUUUU! 🐐" : "WAKE UP WAKE UP! 😡"}`}`,
+
+    // Speed's competitive spirit
+    `${analytics.value.done > 0 ? 
+      `${analytics.value.done} TASKS DONE! BUT I COULD DO MORE! I'M BETTER THAN YOU! SPEED THE GOAT! 🐐` : 
+      "0 TASKS?! NAH NAH NAH, YOU'RE ACTUALLY SELLING! I'M DONE! 😤"}`,
+
+    // Speed's signature rage
+    `${analytics.value.highPriority > 2 && analytics.value.inProgress === 0 ? 
+      "BRO IS YOU DUMB?! HIGH PRIORITY TASKS SITTING THERE! I'M ACTUALLY GETTING TIGHT! 🤬" : 
+      "YOU MOVING LIKE A REAL CHAMPION! SIUUUUUU! ⚽️"}`,
+
+    // Speed's motivational mode
+    `SPEED HERE! ${analytics.value.completionRate < 40 ? 
+      "YOU MAKING ME LOOK BAD RN! DO BETTER! 😠" : 
+      "YOU'RE HIM! YOU'RE ACTUALLY HIM! 🔥"}`,
+
+    // Speed's celebration style
+    `${analytics.value.done === analytics.value.total && analytics.value.total > 0 ? 
+      "SUIIIII! ALL TASKS CLEARED! CRISTIANO RONALDO! SEWEYYYY! 🐐⚽️" : 
+      "WHY YOU NOT FINISHED YET?! YOU PLAYING WITH ME FR! 😤"}`
   ]
   
   return messages[Math.floor(Math.random() * messages.length)]
@@ -109,9 +142,10 @@ watch(() => props.tasks, () => {
 
 .assistant-name {
   font-size: 14px;
-  font-weight: 600;
-  color: #6366f1;
+  font-weight: 800;
+  color: #ef4444;
   margin-bottom: 4px;
+  text-transform: uppercase;
 }
 
 .analysis-text {
