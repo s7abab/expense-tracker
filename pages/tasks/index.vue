@@ -17,7 +17,7 @@
                 <span class="text-subtitle-1 font-weight-medium text-white">{{ column.name }}</span>
                 <v-chip
                   :color="column.chipColor"
-                  class="ml-2"
+                  class="ml-2 task-count-chip"
                   size="small"
                   variant="flat"
                 >
@@ -160,7 +160,7 @@ const columns = [
     icon: 'mdi-format-list-checks', 
     color: 'primary',
     iconColor: 'white',
-    chipColor: 'rgba(255,255,255,0.9)',
+    chipColor: 'rgba(255,255,255,0.15)',
     gradient: 'linear-gradient(135deg, #4F46E5, #7C3AED)'
   },
   { 
@@ -169,7 +169,7 @@ const columns = [
     icon: 'mdi-progress-clock', 
     color: 'info',
     iconColor: 'white',
-    chipColor: 'rgba(255,255,255,0.9)',
+    chipColor: 'rgba(255,255,255,0.15)',
     gradient: 'linear-gradient(135deg, #0EA5E9, #2563EB)'
   },
   { 
@@ -178,7 +178,7 @@ const columns = [
     icon: 'mdi-check-circle', 
     color: 'success',
     iconColor: 'white',
-    chipColor: 'rgba(255,255,255,0.9)',
+    chipColor: 'rgba(255,255,255,0.15)',
     gradient: 'linear-gradient(135deg, #22C55E, #16A34A)'
   },
 ]
@@ -380,6 +380,17 @@ const formatDate = (dateString) => {
   border-radius: 12px;
   margin: 8px;
   height: 80px;
+}
+
+.task-count-chip {
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  
+  :deep(.v-chip__content) {
+    opacity: 1;
+  }
 }
 
 @media (max-width: 600px) {
