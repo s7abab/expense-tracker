@@ -41,5 +41,9 @@ export default defineNuxtConfig({
     public: {
       // Public runtime config
     }
-  }
+  },
+
+  css: [
+    '@mdi/font/css/materialdesignicons.css'
+  ],
 })
