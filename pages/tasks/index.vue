@@ -472,7 +472,7 @@ onUnmounted(() => {
       background-size: 300% 300%;
       animation: shimmer 3s ease infinite;
       z-index: -1;
-      opacity: 0.5;
+      opacity: 1;
     }
 
     .v-card-text {
