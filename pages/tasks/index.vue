@@ -1,7 +1,6 @@
 <template>
   <div class="tasks-page">
     <v-card class="board-container">
-      <TaskAnalytics :tasks="tasks" />
       <div class="board-wrapper">
         <div 
           v-for="column in columns" 
@@ -163,6 +162,7 @@
         </div>
       </div>
     </v-card>
+    <TaskAnalytics :tasks="tasks" />
   </div>
 </template>
 

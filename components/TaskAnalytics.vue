@@ -1,19 +1,48 @@
 <template>
-  <v-card class="analytics-card">
-    <div class="ai-assistant">
-      <v-avatar
-        :image="currentAvatar"
-        size="48"
-        class="assistant-avatar"
-      />
-      <div class="message-bubble">
-        <div class="assistant-name">SPEED</div>
-        <div class="analysis-text">
-          {{ currentMessage }}
+  <div class="speed-assistant">
+    <v-slide-x-transition>
+      <div v-show="isVisible" class="speed-content">
+        <!-- Speech Bubble -->
+        <div class="speech-bubble">
+          <div class="assistant-name">SPEED</div>
+          <div class="analysis-text">
+            {{ currentMessage }}
+          </div>
+        </div>
+        
+        <!-- Speed Avatar -->
+        <div class="avatar-container">
+          <v-avatar
+            :image="currentAvatar"
+            size="120"
+            class="speed-avatar"
+          />
+          <v-btn
+            icon="mdi-close"
+            size="small"
+            variant="text"
+            class="close-btn"
+            color="error"
+            @click="hideAssistant"
+          />
         </div>
       </div>
-    </div>
-  </v-card>
+    </v-slide-x-transition>
+    
+    <!-- Toggle button -->
+    <v-btn
+      v-show="!isVisible"
+      color="error"
+      class="toggle-btn"
+      elevation="4"
+      size="large"
+      height="60"
+      @click="showAssistant"
+    >
+      <v-avatar :image="currentAvatar" size="42" class="toggle-avatar" />
+      <span class="ml-2">ASK SPEED</span>
+    </v-btn>
+  </div>
 </template>
 
 <script setup>
@@ -27,6 +56,7 @@ const props = defineProps({
 })
 
 const currentMessage = ref('')
+const isVisible = ref(true)
 
 // Avatar URLs for different moods
 const avatars = {
@@ -79,7 +109,8 @@ const analytics = computed(() => {
 const generateMessage = () => {
   const messages = [
     // Angry Speed reactions (when tasks aren't getting done)
-    `BRUHHH ${analytics.value.completionRate < 20 ? "YOU ONLY AT ${analytics.value.completionRate}%?! I'M BOUT TO LOSE IT FR FR! 🤬 GET YO LAZY SELF UP! SEWEY!" : 
+    `BRUHHH ${analytics.value.completionRate < 20 ? 
+      `YOU ONLY AT ${analytics.value.completionRate}%?! I'M BOUT TO LOSE IT FR FR! 🤬 GET YO LAZY SELF UP! SEWEY!` : 
       "KEEP GRINDIN' YOU ALMOST THERE! 💪"}`,
 
     `${analytics.value.highPriority > 3 ? 
@@ -155,47 +186,153 @@ onUnmounted(() => {
 watch(() => props.tasks, () => {
   currentMessage.value = generateMessage()
 }, { deep: true })
+
+const hideAssistant = () => {
+  isVisible.value = false
+}
+
+const showAssistant = () => {
+  isVisible.value = true
+  currentMessage.value = generateMessage() // Generate new message when showing
+}
 </script>
 
 <style lang="scss" scoped>
-.analytics-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(99, 102, 241, 0.1);
-  margin-bottom: 16px;
+.speed-assistant {
+  position: fixed;
+  right: 24px;
+  top: 24px;
+  z-index: 100;
 }
 
-.ai-assistant {
-  padding: 16px;
+.speed-content {
+  position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  width: 320px;
 }
 
-.assistant-avatar {
-  border: 2px solid rgba(99, 102, 241, 0.2);
-  background: white;
-  transition: all 0.3s ease; // Smooth transition between avatars
+.speech-bubble {
+  position: relative;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(239, 68, 68, 0.2);
+  border-radius: 20px;
+  padding: 16px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  margin-bottom: 12px;
+  
+  // Speech bubble triangle
+  &:after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    right: 60px;
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 12px solid rgba(255, 255, 255, 0.98);
+  }
+  
+  &:before {
+    content: '';
+    position: absolute;
+    bottom: -14px;
+    right: 58px;
+    width: 0;
+    height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 14px solid rgba(239, 68, 68, 0.2);
+    z-index: -1;
+  }
 }
 
-.message-bubble {
-  flex: 1;
-  background: linear-gradient(to right, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05));
-  border-radius: 12px;
-  padding: 12px;
+.avatar-container {
+  position: relative;
+  margin-right: 24px;
+}
+
+.speed-avatar {
+  border: 3px solid #ef4444;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+  }
+}
+
+.close-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: white !important;
+  border: 2px solid #ef4444 !important;
+  opacity: 0.9;
+  
+  &:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.toggle-btn {
+  border-radius: 16px;
+  padding: 8px 20px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border: 2px solid rgba(239, 68, 68, 0.2);
+  
+  &:hover {
+    .toggle-avatar {
+      transform: scale(1.1);
+    }
+  }
+}
+
+.toggle-avatar {
+  transition: transform 0.2s ease;
 }
 
 .assistant-name {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 800;
   color: #ef4444;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   text-transform: uppercase;
+  text-align: center;
 }
 
 .analysis-text {
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 16px;
+  line-height: 1.5;
   color: #4b5563;
+  text-align: center;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .speed-assistant {
+    right: 16px;
+    top: 16px;
+  }
+
+  .speed-content {
+    width: 300px;
+  }
+
+  .toggle-btn {
+    padding: 6px 16px;
+    
+    .v-avatar {
+      size: 36px;
+    }
+  }
 }
 </style> 
