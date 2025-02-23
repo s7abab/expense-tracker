@@ -120,6 +120,7 @@
 import { ref, watch, computed, onMounted, nextTick } from 'vue'
 import { useSpeedAI } from '../composables/useSpeedAI'
 import { useGemini } from '../composables/useGemini'
+import { getRandomSpeedMessage } from '../utils/speedMessages'
 
 const props = defineProps({
   tasks: {
@@ -145,39 +146,71 @@ const quickQuestions = [
     id: 1,
     text: "How am I doing?",
     prompt: (analytics) => `
-      Act as IShowSpeed, analyzing these task stats:
+      You are IShowSpeed reacting to ${analytics.completionRate}% task completion rate.
+      Current stats:
       - ${analytics.done} completed out of ${analytics.total} tasks
       - ${analytics.inProgress} tasks in progress
-      - ${analytics.highPriority} high priority tasks
-      - ${analytics.completionRate}% completion rate
       
-      Give a short, energetic evaluation of their performance in your signature style.
-      Be dramatic and use your catchphrases!
+      ${analytics.done === 0 ? `
+      IMPORTANT: User has completed ZERO tasks! Be extra insulting!
+      Mock them heavily and use "💀" emoji!
+      ` : ''}
+
+      Rules:
+      1. Be dramatic and extremely insulting if they have 0 completed tasks
+      2. Use reactions: "SUIIIII", "SEWEYY", "NAH NAH NAH", "BRO WHAT", "FR FR", "NO SHOT", "BRUHH"
+      3. Reference gaming or Ronaldo to insult them
+      4. Max 2 sentences, pure aggression
+      5. Use all caps
+      6. Add insults about their gaming skills or speed
+      
+      Example responses for 0 progress:
+      - "NAHHHH YOU ACTUALLY GOT ZERO DONE?? MY DEAD GOLDFISH WORKS HARDER THAN YOU FR FR 💀"
+      - "NO SHOT YOU THIS BAD! EVEN MINECRAFT ZOMBIES MOVE FASTER BRUHH 💀"
     `
   },
   {
     id: 2,
     text: "What should I focus on?",
     prompt: (analytics) => `
-      Act as IShowSpeed giving advice. Looking at these stats:
-      - ${analytics.highPriority} high priority tasks
-      - ${analytics.inProgress} in progress
+      You are Speed giving advice about ${analytics.highPriority} high priority tasks.
+      Current stats:
+      - ${analytics.inProgress} tasks in progress
       - ${analytics.total - analytics.done} tasks remaining
       
-      What should they focus on? Give a short, passionate response in your style!
+      Rules:
+      1. Mock the user's task management
+      2. Use these reactions: "SUIIIII", "SEWEYY", "NO SHOT", "BRUHH"
+      3. Reference gaming or Ronaldo randomly
+      4. Max 2 sentences, be chaotic
+      5. Mix insults with motivation
+      6. Use all caps
+      
+      Example responses:
+      - "NO SHOT YOU GOT ${analytics.highPriority} HIGH PRIORITY TASKS! YOU PLAYING MINECRAFT OR SOMETHING?? FOCUS UP BRUHH!"
+      - "SEWEYY! HANDLE THESE TASKS LIKE RONALDO HANDLES THE BALL... NOT LIKE YOU THO FR FR!"
     `
   },
   {
     id: 3,
-    text: "Motivate me!",
+    text: "Hype me up!",
     prompt: (analytics) => `
-      Act as IShowSpeed giving an intense motivational speech!
-      They have ${analytics.total - analytics.done} tasks left to complete.
-      ${analytics.highPriority} are high priority.
-      Current completion rate: ${analytics.completionRate}%
+      You are Speed hyping up for ${analytics.total - analytics.done} remaining tasks.
+      Current stats:
+      - ${analytics.completionRate}% completion rate
+      - ${analytics.highPriority} high priority tasks
       
-      Give them a brief, high-energy motivational message in your signature style!
-      Use your catchphrases and be dramatic!
+      Rules:
+      1. Be extremely energetic but mock them a bit
+      2. Use these reactions: "SUIIIII", "SEWEYY", "NO SHOT", "LETS COOK"
+      3. Reference gaming or Ronaldo
+      4. Max 2 sentences, be chaotic
+      5. Mix insults with hype
+      6. Use all caps
+      
+      Example responses:
+      - "SUIIIII! YOU MOVING SLOWER THAN A MINECRAFT ZOMBIE BUT I BELIEVE IN YOU! LETS COOK!"
+      - "NO SHOT YOU THIS BAD FR FR! BUT CHANNEL YOUR INNER RONALDO AND DESTROY THESE TASKS SEWEYY!"
     `
   }
 ]
@@ -213,14 +246,14 @@ const analytics = computed(() => {
 const currentAvatar = computed(() => {
   const { completionRate, highPriority, total, done } = analytics.value
   
+  // Show very angry Speed when no progress
+  if (total === 0 || done === 0) {
+    return avatars.very_angry
+  }
+  
   // Show angry Speed when things are bad
   if (completionRate < 30 || (highPriority > 2 && analytics.value.inProgress === 0)) {
     return avatars.angry
-  }
-  
-  // Show sad Speed when no progress or no tasks
-  if (total === 0 || done === 0) {
-    return avatars.sad
   }
   
   // Show happy Speed for good progress
@@ -241,9 +274,13 @@ const askQuestion = async (question) => {
   loadingQuestion.value = null
 }
 
-// Only update message when tasks actually change
+// Replace generateRandomResponse with getRandomSpeedMessage
+const generateRandomResponse = (analytics) => {
+  return getRandomSpeedMessage(analytics)
+}
+
+// Update the watch handler to use random messages
 watch(() => props.tasks, async (newTasks, oldTasks) => {
-  // Only generate new message if task status or count has changed
   const hasChanged = newTasks.some((task, index) => {
     const oldTask = oldTasks[index]
     return !oldTask || 
@@ -252,19 +289,13 @@ watch(() => props.tasks, async (newTasks, oldTasks) => {
   }) || newTasks.length !== oldTasks.length
 
   if (hasChanged) {
-    const response = await generateSpeedResponse(analytics.value)
-    if (response) {
-      aiMessage.value = response
-    }
+    aiMessage.value = generateRandomResponse(analytics.value)
   }
 }, { deep: true })
 
-// Generate initial message when component mounts
-onMounted(async () => {
-  const response = await generateSpeedResponse(analytics.value)
-  if (response) {
-    aiMessage.value = response
-  }
+// Update onMounted to use random messages
+onMounted(() => {
+  aiMessage.value = generateRandomResponse(analytics.value)
 })
 
 const hideAssistant = () => {
@@ -273,12 +304,8 @@ const hideAssistant = () => {
 
 const showAssistant = async () => {
   isVisible.value = true
-  // Generate new message when showing only if we don't have one
   if (!aiMessage.value) {
-    const response = await generateSpeedResponse(analytics.value)
-    if (response) {
-      aiMessage.value = response
-    }
+    aiMessage.value = generateRandomResponse(analytics.value)
   }
 }
 
@@ -309,12 +336,11 @@ const sendMessage = async () => {
   const currentInput = userInput.value
   userInput.value = ''
 
-  // Scroll to bottom after user message
   await nextTick()
   scrollToBottom()
 
   const prompt = `
-    Act as IShowSpeed. The user says: "${currentInput}"
+    You are IShowSpeed, the chaotic and insulting YouTuber. The user says: "${currentInput}"
     
     Current task stats:
     - ${analytics.value.done} completed out of ${analytics.value.total} tasks
@@ -322,13 +348,30 @@ const sendMessage = async () => {
     - ${analytics.value.highPriority} high priority tasks
     - ${analytics.value.completionRate}% completion rate
 
+    ${analytics.value.done === 0 ? `
+    IMPORTANT: User has completed ZERO tasks! Be extra insulting and mock them heavily!
+    Use phrases like:
+    - "YOU ACTUALLY TRASH FR FR"
+    - "NAH THIS THE WORST PERFORMANCE I'VE EVER SEEN"
+    - "MY DOG COULD DO BETTER THAN THIS"
+    - "YOU PLAYING MINECRAFT OR SOMETHING??"
+    - "EVEN RONALDO WOULD BE DISAPPOINTED"
+    ` : ''}
+
     Rules for your response:
-    1. Stay in character as Speed
-    2. Keep it short (max 2-3 sentences)
-    3. Be energetic and dramatic
-    4. Use your catchphrases
-    5. Reference the task stats if relevant
-    6. Be encouraging but maintain your unique style
+    1. Stay in character as Speed - be chaotic and insulting
+    2. Keep it short (1-2 sentences)
+    3. Mock the user aggressively if they have 0 completed tasks
+    4. Use catchphrases: "SUIIIII", "SEWEYY", "NO SHOT", "FR FR", "BRUHH", "NAH NAH NAH"
+    5. Be dramatic and exaggerated
+    6. Reference Ronaldo or gaming to insult them
+    7. Use all caps for maximum intensity
+    8. Add "💀" emoji when being extra insulting
+    
+    Example responses for 0 progress:
+    - "NAHHHH YOU GOT ZERO TASKS DONE?? MY GRANDMA WITH ARTHRITIS MOVES FASTER THAN YOU FR FR 💀"
+    - "NO SHOT YOU THIS USELESS! EVEN MY MINECRAFT VILLAGERS DO MORE WORK BRUHH 💀"
+    - "YOU ACTUALLY PLAYING GAMES OR WHAT?? ZERO COMPLETED?? RONALDO WOULD BE CRYING RN FR FR 💀"
   `
 
   const response = await generateResponse(prompt)
@@ -491,7 +534,7 @@ const sendMessage = async () => {
   &:hover {
     background: rgba(239, 68, 68, 0.1);
     transform: translateY(-1px);
-  }
+  }t
   
   &.v-btn--loading {
     transform: none;
