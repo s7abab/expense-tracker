@@ -1,30 +1,32 @@
 <template>
   <v-app>
     <v-main class="bg-background">
-      <router-view />
+      <v-container class="main-container pa-0">
+        <router-view />
+      </v-container>
       
       <!-- Action Buttons -->
-      <div class="action-buttons-wrapper">
-        <div class="action-buttons d-flex gap-3">
+      <div class="action-buttons-container px-4 py-3">
+        <div class="action-buttons-wrapper">
           <v-btn
             class="action-button"
             color="success"
-            size="x-large"
-            elevation="4"
+            size="large"
+            elevation="2"
             @click="openNumpad('income')"
           >
-            <v-icon size="24" class="mr-2">mdi-arrow-up</v-icon>
+            <v-icon size="20" class="mr-2">mdi-arrow-up</v-icon>
             Income
           </v-btn>
           
           <v-btn
             class="action-button"
             color="error"
-            size="x-large"
-            elevation="4"
+            size="large"
+            elevation="2"
             @click="openNumpad('expense')"
           >
-            <v-icon size="24" class="mr-2">mdi-arrow-down</v-icon>
+            <v-icon size="20" class="mr-2">mdi-arrow-down</v-icon>
             Expense
           </v-btn>
         </div>
@@ -60,29 +62,38 @@ const handleExpenseConfirm = ({ amount, type }) => {
 .bg-background {
   background: #f8fafc;
   min-height: 100vh;
+  padding-bottom: 84px; // Reduced padding for bottom space
+}
+
+.main-container {
+  max-width: 768px; // Limit max width for larger screens
+  margin: 0 auto;
+}
+
+.action-buttons-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .action-buttons-wrapper {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 32px);
-  max-width: 400px;
-  z-index: 100;
-}
-
-.action-buttons {
-  width: 100%;
-}
-
-.action-button {
-  flex: 1;
-  height: 56px;
-  border-radius: 16px !important;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  backdrop-filter: blur(10px);
+  max-width: 768px;
+  margin: 0 auto;
+  display: flex;
+  gap: 8px;
+  
+  .action-button {
+    flex: 1;
+    height: 48px;
+    border-radius: 12px !important;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
 }
 </style>
