@@ -2,11 +2,29 @@
   <v-app>
     <v-main class="bg-background">
       <v-container class="main-container pa-0">
+        <!-- Replace drawer with tabs -->
+        <v-card flat class="mb-4">
+          <v-tabs
+            v-model="activeTab"
+            color="primary"
+            align-tabs="center"
+          >
+            <v-tab value="finance" to="/">
+              <v-icon start>mdi-wallet</v-icon>
+              Finance
+            </v-tab>
+            <v-tab value="tasks" to="/tasks">
+              <v-icon start>mdi-format-list-checks</v-icon>
+              Tasks
+            </v-tab>
+          </v-tabs>
+        </v-card>
+
         <router-view />
       </v-container>
       
-      <!-- Action Buttons -->
-      <div class="action-buttons-container px-4 py-3">
+      <!-- Action Buttons - Only show on finance tab -->
+      <div v-if="!isTasksPage" class="action-buttons-container px-4 py-3">
         <div class="action-buttons-wrapper">
           <v-btn
             class="action-button"
@@ -42,13 +60,26 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useStorage } from '../composables/useStorage'
 
+const route = useRoute()
+const activeTab = ref('finance')
 const { addTransaction } = useStorage()
 
 const showNumpad = ref(false)
 const transactionType = ref('expense')
+
+// Check if current page is tasks
+const isTasksPage = computed(() => {
+  return route.path.startsWith('/tasks')
+})
+
+// Update active tab based on route
+watch(route, (newRoute) => {
+  activeTab.value = newRoute.path.startsWith('/tasks') ? 'tasks' : 'finance'
+})
 
 const openNumpad = (type) => {
   transactionType.value = type
@@ -69,12 +100,14 @@ const handleExpenseConfirm = ({ amount, type, category }) => {
 .bg-background {
   background: #f8fafc;
   min-height: 100vh;
-  padding-bottom: 84px; // Reduced padding for bottom space
+  padding-bottom: 84px;
 }
 
 .main-container {
-  max-width: 768px; // Limit max width for larger screens
+  max-width: 1200px;
   margin: 0 auto;
+  height: 100%;
+  padding: 0 16px;
 }
 
 .action-buttons-container {
