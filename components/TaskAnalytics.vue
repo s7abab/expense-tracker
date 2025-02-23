@@ -7,7 +7,9 @@
           <div class="assistant-name">SPEED</div>
           <div class="analysis-text">
             <template v-if="isLoading">
-              typing...
+              <div class="message-content">
+                typing...
+              </div>
             </template>
             <template v-else>
               {{ aiMessage }}
@@ -564,15 +566,14 @@ const scrollToBottom = () => {
 }
 
 .analysis-text {
-  font-size: 16px;
-  line-height: 1.5;
-  color: #4b5563;
-  text-align: center;
-  font-weight: normal;
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  .message-content {
+    display: inline-block;
+    padding: 8px 12px;
+    background: #f1f5f9;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+  }
 }
 
 .quick-questions {
