@@ -27,6 +27,58 @@
               </v-btn>
             </div>
           </div>
+          
+          <!-- Chat Section -->
+          <div class="chat-section mt-4" v-if="showChat">
+            <div class="chat-messages" ref="chatMessagesRef">
+              <div 
+                v-for="(message, index) in chatMessages" 
+                :key="index"
+                class="message"
+                :class="message.role"
+              >
+                <div class="message-content">
+                  {{ message.content }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="chat-input mt-3">
+              <v-text-field
+                v-model="userInput"
+                placeholder="Chat with Speed..."
+                variant="outlined"
+                density="comfortable"
+                hide-details
+                :disabled="isLoading"
+                @keyup.enter="sendMessage"
+              >
+                <template #append>
+                  <v-btn
+                    icon="mdi-send"
+                    size="small"
+                    color="error"
+                    variant="text"
+                    :loading="isLoading"
+                    :disabled="!userInput.trim()"
+                    @click="sendMessage"
+                  />
+                </template>
+              </v-text-field>
+            </div>
+          </div>
+          
+          <!-- Chat Toggle Button -->
+          <div class="d-flex justify-center mt-3">
+            <v-btn
+              variant="text"
+              color="error"
+              size="small"
+              @click="toggleChat"
+            >
+              {{ showChat ? 'Hide Chat' : 'Chat with Speed' }}
+            </v-btn>
+          </div>
         </div>
         
         <!-- Speed Avatar -->
@@ -65,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, nextTick } from 'vue'
 import { useSpeedAI } from '../composables/useSpeedAI'
 import { useGemini } from '../composables/useGemini'
 
@@ -82,6 +134,10 @@ const { generateResponse } = useGemini()
 const aiMessage = ref('')
 const isVisible = ref(true)
 const loadingQuestion = ref(null)
+const showChat = ref(false)
+const chatMessages = ref([])
+const userInput = ref('')
+const chatMessagesRef = ref(null)
 
 // Quick questions for Speed
 const quickQuestions = [
@@ -223,6 +279,68 @@ const showAssistant = async () => {
     if (response) {
       aiMessage.value = response
     }
+  }
+}
+
+const toggleChat = () => {
+  showChat.value = !showChat.value
+  if (showChat.value) {
+    nextTick(() => {
+      scrollToBottom()
+    })
+  }
+}
+
+const scrollToBottom = () => {
+  if (chatMessagesRef.value) {
+    chatMessagesRef.value.scrollTop = chatMessagesRef.value.scrollHeight
+  }
+}
+
+const sendMessage = async () => {
+  if (!userInput.value.trim() || isLoading.value) return
+
+  const userMessage = {
+    role: 'user',
+    content: userInput.value
+  }
+  
+  chatMessages.value.push(userMessage)
+  const currentInput = userInput.value
+  userInput.value = ''
+
+  // Scroll to bottom after user message
+  await nextTick()
+  scrollToBottom()
+
+  const prompt = `
+    Act as IShowSpeed. The user says: "${currentInput}"
+    
+    Current task stats:
+    - ${analytics.value.done} completed out of ${analytics.value.total} tasks
+    - ${analytics.value.inProgress} tasks in progress
+    - ${analytics.value.highPriority} high priority tasks
+    - ${analytics.value.completionRate}% completion rate
+
+    Rules for your response:
+    1. Stay in character as Speed
+    2. Keep it short (max 2-3 sentences)
+    3. Be energetic and dramatic
+    4. Use your catchphrases
+    5. Reference the task stats if relevant
+    6. Be encouraging but maintain your unique style
+  `
+
+  const response = await generateResponse(prompt)
+  
+  if (response) {
+    chatMessages.value.push({
+      role: 'assistant',
+      content: response
+    })
+    // Scroll to bottom after response
+    await nextTick()
+    scrollToBottom()
   }
 }
 </script>
@@ -377,6 +495,68 @@ const showAssistant = async () => {
   
   &.v-btn--loading {
     transform: none;
+  }
+}
+
+.chat-section {
+  border-top: 1px solid rgba(239, 68, 68, 0.1);
+  padding-top: 12px;
+}
+
+.chat-messages {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+  
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(239, 68, 68, 0.2);
+    border-radius: 4px;
+  }
+}
+
+.message {
+  margin-bottom: 8px;
+  display: flex;
+  
+  &.user {
+    justify-content: flex-end;
+    
+    .message-content {
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 12px 12px 0 12px;
+    }
+  }
+  
+  &.assistant {
+    justify-content: flex-start;
+    
+    .message-content {
+      background: #f1f5f9;
+      border-radius: 12px 12px 12px 0;
+    }
+  }
+}
+
+.message-content {
+  padding: 8px 12px;
+  max-width: 85%;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.chat-input {
+  :deep(.v-field) {
+    border-radius: 12px;
+    
+    &.v-field--focused {
+      .v-field__outline {
+        --v-field-border-opacity: 0.2;
+      }
+    }
   }
 }
 
