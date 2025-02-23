@@ -6,7 +6,26 @@
         <div class="speech-bubble">
           <div class="assistant-name">SPEED</div>
           <div class="analysis-text">
-            {{ currentMessage }}
+            {{ aiMessage }}
+          </div>
+          
+          <!-- Quick Questions -->
+          <div class="quick-questions mt-4">
+            <div class="questions-wrapper">
+              <v-btn
+                v-for="(question, index) in quickQuestions"
+                :key="index"
+                :loading="loadingQuestion === question.id"
+                :disabled="loadingQuestion !== null"
+                color="error"
+                variant="outlined"
+                class="question-btn mb-2"
+                block
+                @click="askQuestion(question)"
+              >
+                {{ question.text }}
+              </v-btn>
+            </div>
           </div>
         </div>
         
@@ -46,7 +65,9 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
+import { useSpeedAI } from '../composables/useSpeedAI'
+import { useGemini } from '../composables/useGemini'
 
 const props = defineProps({
   tasks: {
@@ -55,8 +76,55 @@ const props = defineProps({
   }
 })
 
-const currentMessage = ref('')
+const { generateSpeedResponse, isLoading } = useSpeedAI()
+const { generateResponse } = useGemini()
+
+const aiMessage = ref('')
 const isVisible = ref(true)
+const loadingQuestion = ref(null)
+
+// Quick questions for Speed
+const quickQuestions = [
+  { 
+    id: 1,
+    text: "How am I doing?",
+    prompt: (analytics) => `
+      Act as IShowSpeed, analyzing these task stats:
+      - ${analytics.done} completed out of ${analytics.total} tasks
+      - ${analytics.inProgress} tasks in progress
+      - ${analytics.highPriority} high priority tasks
+      - ${analytics.completionRate}% completion rate
+      
+      Give a short, energetic evaluation of their performance in your signature style.
+      Be dramatic and use your catchphrases!
+    `
+  },
+  {
+    id: 2,
+    text: "What should I focus on?",
+    prompt: (analytics) => `
+      Act as IShowSpeed giving advice. Looking at these stats:
+      - ${analytics.highPriority} high priority tasks
+      - ${analytics.inProgress} in progress
+      - ${analytics.total - analytics.done} tasks remaining
+      
+      What should they focus on? Give a short, passionate response in your style!
+    `
+  },
+  {
+    id: 3,
+    text: "Motivate me!",
+    prompt: (analytics) => `
+      Act as IShowSpeed giving an intense motivational speech!
+      They have ${analytics.total - analytics.done} tasks left to complete.
+      ${analytics.highPriority} are high priority.
+      Current completion rate: ${analytics.completionRate}%
+      
+      Give them a brief, high-energy motivational message in your signature style!
+      Use your catchphrases and be dramatic!
+    `
+  }
+]
 
 // Avatar URLs for different moods
 const avatars = {
@@ -68,6 +136,22 @@ const avatars = {
   surprised: "https://media0.giphy.com/media/lxxOGaDRk4f7R5TkBd/200w.gif?cid=6c09b952p8wg2l73ceh9qdnajr9n3yrzievbpufjlmo6fnqz&ep=v1_gifs_search&rid=200w.gif&ct=g",
   "sui":"https://media.tenor.com/vgQ373N5YtsAAAAM/speed-ishowspeed.gif"
 }
+
+// Compute analytics
+const analytics = computed(() => {
+  const total = props.tasks.length
+  const done = props.tasks.filter(t => t.status === 'done').length
+  const inProgress = props.tasks.filter(t => t.status === 'inProgress').length
+  const highPriority = props.tasks.filter(t => t.priority === 'High').length
+  
+  return {
+    total,
+    done,
+    inProgress,
+    highPriority,
+    completionRate: total ? Math.round((done / total) * 100) : 0
+  }
+})
 
 // Determine avatar based on analytics
 const currentAvatar = computed(() => {
@@ -92,161 +176,54 @@ const currentAvatar = computed(() => {
   return avatars.normal
 })
 
-// Compute analytics
-const analytics = computed(() => {
-  const total = props.tasks.length
-  const done = props.tasks.filter(t => t.status === 'done').length
-  const inProgress = props.tasks.filter(t => t.status === 'inProgress').length
-  const highPriority = props.tasks.filter(t => t.priority === 'High').length
-  
-  return {
-    total,
-    done,
-    inProgress,
-    highPriority,
-    completionRate: total ? Math.round((done / total) * 100) : 0
+const askQuestion = async (question) => {
+  loadingQuestion.value = question.id
+  const response = await generateResponse(question.prompt(analytics.value))
+  if (response) {
+    aiMessage.value = response
   }
-})
-
-// Generate different messages based on analytics
-const generateMessage = () => {
-  const messages = [
-    // Angry Speed reactions
-    `${analytics.value.completionRate < 30 ? 
-      "BRO YOU'RE ACTUALLY TRASH! 💀 MY DEAD HAMSTER WORKS HARDER THAN YOU FR FR! GET YO STUPID SELF MOVING! 🤬" : 
-      "AYOO YOU STILL SLACKING! SPEED AIN'T PLAYING NO MORE! 😤"}`,
-
-    // Very angry Speed reactions
-    `${analytics.value.highPriority > 3 ? 
-      "NAH FR THIS TIME I'M BOUT TO THROW HANDS! 👊 ${analytics.value.highPriority} HIGH PRIORITY?! YOU'RE ACTUALLY BRAIN DEAD! 💀" :
-      "YOU LUCKY I'M IN A GOOD MOOD OR I'D BE THROWING CHAIRS RN! 🪑"}`,
-
-    // Happy/Crackhead Speed energy
-    `${analytics.value.done > analytics.value.total * 0.8 ? 
-      "YESSSIRRR! YOU FINALLY USING THAT SMOOTH BRAIN! SPEED IS GEEKED UP! 🔥 LETS GOOO!" : 
-      "NAH YOU MOVING SLOWER THAN MY INTERNET ON STREAM! WAKE UP! 😭"}`,
-
-    // Sad/Depressed Speed
-    `${analytics.value.done === 0 ? 
-      "bro... this ain't it... you making speed more depressed than when he lost to KSI... 😢" : 
-      "speed was gonna end it all but you actually did something... 💀"}`,
-
-    // Normal/Unhinged Speed
-    `${analytics.value.inProgress ? 
-      "SPEED IS WATCHING YOU! DON'T MAKE ME ACT UP! I'M ACTUALLY INSANE! 🤪" : 
-      "BRO REALLY DOING NOTHING! YOU DUMBER THAN ME IN MATH CLASS! 📚"}`,
-
-    // SUI Mode Speed
-    `${analytics.value.completionRate > 90 ? 
-      "SIUUUUUU! YOU ACTUALLY NOT USELESS! RONALDO WOULD STILL BENCH YOU THO! ⚽️" : 
-      "NOT EVEN MESSI PLAYS THIS BAD! GET YOUR LIFE TOGETHER! 💀"}`,
-
-    // Surprised Speed
-    `${analytics.value.done > 5 ? 
-      "YOOO! WHO'S CONTROLLING YOU?! YOU USUALLY DUMBER THAN A BAG OF ROCKS! 🪨" : 
-      "BRO WHAT?! MY GOLDFISH GOT MORE WORK ETHIC! 🐠"}`,
-
-    // Angry Speed reactions (when tasks aren't getting done)
-    `BRUHHH ${analytics.value.completionRate < 20 ? 
-      `YOU ONLY AT ${analytics.value.completionRate}%?! I'M BOUT TO LOSE IT FR FR! 🤬 GET YO LAZY SELF UP! SEWEY!` : 
-      "KEEP GRINDIN' YOU ALMOST THERE! 💪"}`,
-
-    `${analytics.value.highPriority > 3 ? 
-      "NAHHHH THIS IS ACTUALLY MAKING ME MAD MAD! ${analytics.value.highPriority} HIGH PRIORITY?! DO SOMETHING RN! 🤬" : 
-      "AIGHT BET, YOU HANDLING THEM PRIORITIES! SUIIIII! 🐐"}`,
-
-    // Happy/Excited Speed reactions (for good progress)
-    `${analytics.value.done > 3 ? 
-      "YESSIR! YOU GOING STUPID WITH IT! ${analytics.value.done} TASKS CLEARED! CRISTIANO RONALDO! SEWEYYYY! ⚽️🔥" : 
-      "MY GRANDMA WORK FASTER THAN THIS BRO! 💀"}`,
-
-    // Normal Speed reactions (general updates)
-    `${analytics.value.inProgress ? 
-      `YOU GOT ${analytics.value.inProgress} TASKS IN THE COOKER! THAT'S WHAT I LIKE TO SEE! WHO'S THE BEST?! SPEED! 🏃‍♂️` : 
-      "BRO REALLY SITTING HERE DOING NOTHING! I CAN'T WITH YOU! 😭"}`,
-
-    // Classic Speed catchphrases
-    `${analytics.value.total === 0 ? 
-      "SPEED HERE! AND TODAY... BRO WHERE ARE THE TASKS AT?! ARE YOU SERIOUS RN?! 😤" :
-      `${analytics.value.completionRate}% COMPLETE! ${analytics.value.completionRate > 50 ? "SIUUUUUU! 🐐" : "WAKE UP WAKE UP! 😡"}`}`,
-
-    // Speed's competitive spirit
-    `${analytics.value.done > 0 ? 
-      `${analytics.value.done} TASKS DONE! BUT I COULD DO MORE! I'M BETTER THAN YOU! SPEED THE GOAT! 🐐` : 
-      "0 TASKS?! NAH NAH NAH, YOU'RE ACTUALLY SELLING! I'M DONE! 😤"}`,
-
-    // Speed's signature rage
-    `${analytics.value.highPriority > 2 && analytics.value.inProgress === 0 ? 
-      "BRO IS YOU DUMB?! HIGH PRIORITY TASKS SITTING THERE! I'M ACTUALLY GETTING TIGHT! 🤬" : 
-      "YOU MOVING LIKE A REAL CHAMPION! SIUUUUUU! ⚽️"}`,
-
-    // Speed's motivational mode
-    `SPEED HERE! ${analytics.value.completionRate < 40 ? 
-      "YOU MAKING ME LOOK BAD RN! DO BETTER! 😠" : 
-      "YOU'RE HIM! YOU'RE ACTUALLY HIM! 🔥"}`,
-
-    // Speed's celebration style
-    `${analytics.value.done === analytics.value.total && analytics.value.total > 0 ? 
-      "SUIIIII! ALL TASKS CLEARED! CRISTIANO RONALDO! SEWEYYYY! 🐐⚽️" : 
-      "WHY YOU NOT FINISHED YET?! YOU PLAYING WITH ME FR! 😤"}`,
-
-    // Add new sad Speed reactions
-    `${analytics.value.done === 0 ? 
-      "bro... i'm actually sad rn... not a single task done? 😢 you making speed cry fr fr..." : 
-      "KEEP THAT GRIND UP! DON'T MAKE ME SAD AGAIN! 💪"}`,
-
-    `${analytics.value.total === 0 ? 
-      "my disappointment is immeasurable... and my day is ruined... WHERE THE TASKS AT?! 😭" : 
-      "AT LEAST YOU GOT SOME TASKS! NOW DO THEM! 😤"}`,
-
-    `${analytics.value.highPriority > 0 && analytics.value.inProgress === 0 ? 
-      "you see these priority tasks and doing nothing... why you doing this to me bro... 😢" : 
-      "THAT'S MORE LIKE IT! KEEP WORKING! 🔥"}`,
-
-    // Very angry when high priority tasks pile up
-    `${analytics.value.highPriority > 5 ? 
-      "BRO I'M ACTUALLY BOUT TO LOSE IT! ${analytics.value.highPriority} HIGH PRIORITY?! *SPEED RAGE MODE* 🤬🔥" : 
-      "KEEP THEM PRIORITIES IN CHECK! YOU DON'T WANT TO SEE ME MAD! 😤"}`,
-
-    // Surprised at quick progress
-    `${analytics.value.done > analytics.value.total * 0.5 && analytics.value.inProgress > 2 ? 
-      "HOLD UP! YOU MOVING TOO FAST! SPEED CAN'T EVEN KEEP UP! 😱🏃‍♂️" : 
-      "WHY CAN'T YOU MOVE THIS FAST ALL THE TIME?! 🤔"}`,
-
-    // SUI celebration for completed tasks
-    `${analytics.value.done === analytics.value.total ? 
-      "SIUUUUUUU! SIUUUUUUU! DOUBLE SIUUUUUUU! 🐐⚽️🐐 SPEED AND CR7 PROUD OF YOU!" : 
-      "NOT ENOUGH SIUUU ENERGY! NEED MORE COMPLETED TASKS! ⚽️"}`
-  ]
-  
-  return messages[Math.floor(Math.random() * messages.length)]
+  loadingQuestion.value = null
 }
 
-// Update message every 10 seconds
-let messageInterval
-onMounted(() => {
-  currentMessage.value = generateMessage()
-  messageInterval = setInterval(() => {
-    currentMessage.value = generateMessage()
-  }, 10000)
-})
+// Only update message when tasks actually change
+watch(() => props.tasks, async (newTasks, oldTasks) => {
+  // Only generate new message if task status or count has changed
+  const hasChanged = newTasks.some((task, index) => {
+    const oldTask = oldTasks[index]
+    return !oldTask || 
+           task.status !== oldTask.status || 
+           task.priority !== oldTask.priority
+  }) || newTasks.length !== oldTasks.length
 
-onUnmounted(() => {
-  clearInterval(messageInterval)
-})
-
-// Update message when tasks change
-watch(() => props.tasks, () => {
-  currentMessage.value = generateMessage()
+  if (hasChanged) {
+    const response = await generateSpeedResponse(analytics.value)
+    if (response) {
+      aiMessage.value = response
+    }
+  }
 }, { deep: true })
+
+// Generate initial message when component mounts
+onMounted(async () => {
+  const response = await generateSpeedResponse(analytics.value)
+  if (response) {
+    aiMessage.value = response
+  }
+})
 
 const hideAssistant = () => {
   isVisible.value = false
 }
 
-const showAssistant = () => {
+const showAssistant = async () => {
   isVisible.value = true
-  currentMessage.value = generateMessage() // Generate new message when showing
+  // Generate new message when showing only if we don't have one
+  if (!aiMessage.value) {
+    const response = await generateSpeedResponse(analytics.value)
+    if (response) {
+      aiMessage.value = response
+    }
+  }
 }
 </script>
 
@@ -368,6 +345,39 @@ const showAssistant = () => {
   color: #4b5563;
   text-align: center;
   font-weight: 500;
+  min-height: 48px; // Ensure consistent height
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-questions {
+  border-top: 1px solid rgba(239, 68, 68, 0.1);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.questions-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.question-btn {
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: 0;
+  border-radius: 12px;
+  height: 40px;
+  
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  &.v-btn--loading {
+    transform: none;
+  }
 }
 
 @media (max-width: 768px) {
