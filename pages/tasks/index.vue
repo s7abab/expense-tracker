@@ -455,11 +455,12 @@ onUnmounted(() => {
     transform: translateY(-2px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    border: none;
     
     &::before {
       content: '';
       position: absolute;
-      inset: 0;
+      inset: -2px;
       border-radius: 16px;
       background: linear-gradient(
         125deg,
@@ -470,15 +471,14 @@ onUnmounted(() => {
       );
       background-size: 300% 300%;
       animation: shimmer 3s ease infinite;
-      z-index: 0;
-      opacity: 0.3;         // Control overall opacity here
-      overflow: hidden;
+      z-index: -1;
+      opacity: 0.5;
     }
 
     .v-card-text {
       position: relative;
       z-index: 1;
-      background: rgba(255, 255, 255, 0.75); // Slightly more transparent
+      background: rgba(255, 255, 255, 0.9);
       border-radius: 16px;
     }
 
