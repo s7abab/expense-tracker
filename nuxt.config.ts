@@ -34,5 +34,12 @@ export default defineNuxtConfig({
     },
   },
 
-  compatibilityDate: '2025-02-23'
+  compatibilityDate: '2025-02-23',
+
+  runtimeConfig: {
+    geminiApiKey: process.env.GEMINI_API_KEY,
+    public: {
+      // Public runtime config
+    }
+  }
 })

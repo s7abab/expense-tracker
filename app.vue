@@ -17,6 +17,10 @@
               <v-icon start>mdi-format-list-checks</v-icon>
               Tasks
             </v-tab>
+            <v-tab value="ai" to="/ai-chat">
+              <v-icon start>mdi-robot</v-icon>
+              AI Chat
+            </v-tab>
           </v-tabs>
         </v-card>
 
