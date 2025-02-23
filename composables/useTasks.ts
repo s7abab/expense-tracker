@@ -13,6 +13,7 @@ export interface Task {
   }
   dueDate: string
   status: 'todo' | 'inProgress' | 'done'
+  selected?: boolean
 }
 
 export const useTasks = () => {

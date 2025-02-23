@@ -103,8 +103,10 @@
                       class="task-card"
                       :class="{
                         'on-hover': isHovering,
-                        'task-focused': focusedTaskId === task.id
+                        'task-focused': focusedTaskId === task.id,
+                        'selected': task.selected
                       }"
+                      @click="handleTaskClick(task, $event)"
                       @dblclick="handleTaskDoubleClick(task.id)"
                     >
                       <v-card-text class="pa-4">
@@ -167,13 +169,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import draggable from 'vuedraggable'
 import { useTasks } from '../../composables/useTasks'
 import TaskAnalytics from '../../components/TaskAnalytics.vue'
 
 const tasksListRef = ref(null)
-const { tasks, addTask, updateTask } = useTasks()
+const { tasks, addTask, updateTask, deleteTask } = useTasks()
 
 const newTaskColumn = ref(null)
 const quickTask = ref({
@@ -283,6 +285,53 @@ const togglePriority = (task) => {
 const handleTaskDoubleClick = (taskId) => {
   focusedTaskId.value = focusedTaskId.value === taskId ? null : taskId
 }
+
+// Updated keyboard event handler
+const handleKeyDown = (event) => {
+  // Prevent delete if we're in an input field
+  if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+    return
+  }
+  
+  if ((event.key === 'Delete' || event.key === 'Backspace') && !event.metaKey && !event.ctrlKey) {
+    event.preventDefault() // Prevent browser back navigation
+    const selectedTask = tasks.value.find(t => t.selected)
+    if (selectedTask) {
+      deleteTask(selectedTask.id)
+      // Clear selection after delete
+      tasks.value.forEach(t => t.selected = false)
+    }
+  }
+}
+
+const selectTask = (task) => {
+  // Deselect all other tasks first
+  tasks.value.forEach(t => {
+    t.selected = false
+  })
+  // Then select the clicked task
+  const taskToSelect = tasks.value.find(t => t.id === task.id)
+  if (taskToSelect) {
+    taskToSelect.selected = true
+  }
+}
+
+const handleTaskClick = (task, event) => {
+  // Only select if not clicking on interactive elements
+  if (!event.target.closest('.v-btn') && 
+      !event.target.closest('.draggable-handle') &&
+      !event.target.closest('.priority-chip')) {
+    selectTask(task)
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
 </script>
 
 <style lang="scss" scoped>
@@ -391,6 +440,8 @@ const handleTaskDoubleClick = (taskId) => {
   border: 1px solid rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
   
   &.on-hover {
     transform: translateY(-2px);
@@ -435,6 +486,11 @@ const handleTaskDoubleClick = (taskId) => {
       height: 5px;
       opacity: 1;
     }
+  }
+
+  &.selected {
+    border-color: rgb(var(--v-theme-primary));
+    background: rgba(var(--v-theme-primary), 0.05);
   }
 
   .priority-strip {
