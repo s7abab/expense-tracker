@@ -2,7 +2,7 @@
   <v-card class="analytics-card">
     <div class="ai-assistant">
       <v-avatar
-        image="https://yt3.googleusercontent.com/ytc/AIf8zZTNiXkXpDYBl1MtK3mT3ypGgvMkHHlgLfTaIwNY=s176-c-k-c0x00ffffff-no-rj"
+        :image="currentAvatar"
         size="48"
         class="assistant-avatar"
       />
@@ -27,6 +27,37 @@ const props = defineProps({
 })
 
 const currentMessage = ref('')
+
+// Avatar URLs for different moods
+const avatars = {
+  angry: "https://image-cdn.essentiallysports.com/wp-content/uploads/IShowSpeed-4-640x640.png",
+  happy: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRscA_F7YdntUrC2Dkc-kE845pkKkZZT6tnrA&s",
+  normal: "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/07ed52f9-65de-4d91-afc1-6d9594f0de81/dgrlexe-c422f5f4-26f5-4cce-a070-13bfb07b4638.png/v1/fill/w_1044,h_766,q_70,strp/i_show_speed__1_by_mrorlandomagicfan200_dgrlexe-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9OTE0IiwicGF0aCI6IlwvZlwvMDdlZDUyZjktNjVkZS00ZDkxLWFmYzEtNmQ5NTk0ZjBkZTgxXC9kZ3JsZXhlLWM0MjJmNWY0LTI2ZjUtNGNjZS1hMDcwLTEzYmZiMDdiNDYzOC5wbmciLCJ3aWR0aCI6Ijw9MTI0NiJ9XV0sImF1ZCI6WyJ1cm46c2VydmljZTppbWFnZS5vcGVyYXRpb25zIl19.GBdiBzg385vvRL0tYuF_tzoJ62uLdbom2kMvw_AFPNE",
+  sad: "https://www.indiatimes.com/entertainment/bollywood/american-youtuber-ishowspeed-reacts-to-jawans-trailer-calls-it-new-avengers-movie-609009.html"
+}
+
+// Determine avatar based on analytics
+const currentAvatar = computed(() => {
+  const { completionRate, highPriority, total, done } = analytics.value
+  
+  // Show angry Speed when things are bad
+  if (completionRate < 30 || (highPriority > 2 && analytics.value.inProgress === 0)) {
+    return avatars.angry
+  }
+  
+  // Show sad Speed when no progress or no tasks
+  if (total === 0 || done === 0) {
+    return avatars.sad
+  }
+  
+  // Show happy Speed for good progress
+  if (completionRate > 70 || analytics.value.done === total) {
+    return avatars.happy
+  }
+  
+  // Default to normal Speed
+  return avatars.normal
+})
 
 // Compute analytics
 const analytics = computed(() => {
@@ -88,7 +119,20 @@ const generateMessage = () => {
     // Speed's celebration style
     `${analytics.value.done === analytics.value.total && analytics.value.total > 0 ? 
       "SUIIIII! ALL TASKS CLEARED! CRISTIANO RONALDO! SEWEYYYY! 🐐⚽️" : 
-      "WHY YOU NOT FINISHED YET?! YOU PLAYING WITH ME FR! 😤"}`
+      "WHY YOU NOT FINISHED YET?! YOU PLAYING WITH ME FR! 😤"}`,
+
+    // Add new sad Speed reactions
+    `${analytics.value.done === 0 ? 
+      "bro... i'm actually sad rn... not a single task done? 😢 you making speed cry fr fr..." : 
+      "KEEP THAT GRIND UP! DON'T MAKE ME SAD AGAIN! 💪"}`,
+
+    `${analytics.value.total === 0 ? 
+      "my disappointment is immeasurable... and my day is ruined... WHERE THE TASKS AT?! 😭" : 
+      "AT LEAST YOU GOT SOME TASKS! NOW DO THEM! 😤"}`,
+
+    `${analytics.value.highPriority > 0 && analytics.value.inProgress === 0 ? 
+      "you see these priority tasks and doing nothing... why you doing this to me bro... 😢" : 
+      "THAT'S MORE LIKE IT! KEEP WORKING! 🔥"}`
   ]
   
   return messages[Math.floor(Math.random() * messages.length)]
@@ -131,6 +175,7 @@ watch(() => props.tasks, () => {
 .assistant-avatar {
   border: 2px solid rgba(99, 102, 241, 0.2);
   background: white;
+  transition: all 0.3s ease; // Smooth transition between avatars
 }
 
 .message-bubble {
