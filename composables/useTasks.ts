@@ -16,28 +16,29 @@ export interface Task {
 }
 
 export const useTasks = () => {
-  const tasks = useState<Task[]>('tasks', () => {
-    if (process.client) {
-      const stored = localStorage.getItem('tasks')
-      return stored ? JSON.parse(stored) : []
-    }
-    return []
-  })
+  const tasks = useState<Task[]>('tasks', () => [])
 
   if (process.client) {
+    const stored = localStorage.getItem('tasks')
+    if (stored) {
+      tasks.value = JSON.parse(stored)
+    }
+
     watch(tasks, (newTasks) => {
       localStorage.setItem('tasks', JSON.stringify(newTasks))
     }, { deep: true })
   }
 
   const addTask = (task: Task) => {
-    tasks.value.unshift(task)
+    tasks.value = [task, ...tasks.value]
   }
 
   const updateTask = (updatedTask: Task) => {
     const index = tasks.value.findIndex(t => t.id === updatedTask.id)
     if (index !== -1) {
-      tasks.value[index] = updatedTask
+      const newTasks = [...tasks.value]
+      newTasks[index] = updatedTask
+      tasks.value = newTasks
     }
   }
 
