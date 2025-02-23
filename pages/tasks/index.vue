@@ -101,7 +101,11 @@
                       v-bind="props"
                       :elevation="isHovering ? 3 : 1"
                       class="task-card"
-                      :class="{ 'on-hover': isHovering }"
+                      :class="{
+                        'on-hover': isHovering,
+                        'task-focused': focusedTaskId === task.id
+                      }"
+                      @dblclick="handleTaskDoubleClick(task.id)"
                     >
                       <v-card-text class="pa-4">
                         <!-- Priority Strip -->
@@ -173,6 +177,8 @@ const newTaskColumn = ref(null)
 const quickTask = ref({
   title: '',
 })
+
+const focusedTaskId = ref(null)
 
 const priorities = ['High', 'Medium', 'Low']
 
@@ -270,6 +276,10 @@ const togglePriority = (task) => {
     ...task, 
     priority: priorities[nextIndex] 
   })
+}
+
+const handleTaskDoubleClick = (taskId) => {
+  focusedTaskId.value = focusedTaskId.value === taskId ? null : taskId
 }
 </script>
 
@@ -384,6 +394,45 @@ const togglePriority = (task) => {
     transform: translateY(-2px);
     border-color: rgba(0, 0, 0, 0.1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  &.task-focused {
+    position: relative;
+    z-index: 2;
+    transform: translateY(-2px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      background: linear-gradient(
+        125deg,
+        rgb(16, 93, 237),    // Pure magenta
+        rgb(0, 255, 170),    // Pure cyan
+        rgb(255, 0, 128),    // Pure pink
+        rgb(55, 14, 236)    
+      );
+      background-size: 300% 300%;
+      animation: shimmer 3s ease infinite;
+      z-index: 0;
+      opacity: 0.3;         // Control overall opacity here
+      overflow: hidden;
+    }
+
+    .v-card-text {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.75); // Slightly more transparent
+      border-radius: 16px;
+    }
+
+    .priority-strip {
+      height: 5px;
+      opacity: 1;
+    }
   }
 
   .priority-strip {
@@ -513,6 +562,18 @@ const togglePriority = (task) => {
     .column-header {
       border-radius: 12px 12px 0 0;
     }
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
   }
 }
 </style> 
