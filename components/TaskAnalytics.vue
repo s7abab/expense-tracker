@@ -111,6 +111,41 @@ const analytics = computed(() => {
 // Generate different messages based on analytics
 const generateMessage = () => {
   const messages = [
+    // Angry Speed reactions
+    `${analytics.value.completionRate < 30 ? 
+      "BRO YOU'RE ACTUALLY TRASH! 💀 MY DEAD HAMSTER WORKS HARDER THAN YOU FR FR! GET YO STUPID SELF MOVING! 🤬" : 
+      "AYOO YOU STILL SLACKING! SPEED AIN'T PLAYING NO MORE! 😤"}`,
+
+    // Very angry Speed reactions
+    `${analytics.value.highPriority > 3 ? 
+      "NAH FR THIS TIME I'M BOUT TO THROW HANDS! 👊 ${analytics.value.highPriority} HIGH PRIORITY?! YOU'RE ACTUALLY BRAIN DEAD! 💀" :
+      "YOU LUCKY I'M IN A GOOD MOOD OR I'D BE THROWING CHAIRS RN! 🪑"}`,
+
+    // Happy/Crackhead Speed energy
+    `${analytics.value.done > analytics.value.total * 0.8 ? 
+      "YESSSIRRR! YOU FINALLY USING THAT SMOOTH BRAIN! SPEED IS GEEKED UP! 🔥 LETS GOOO!" : 
+      "NAH YOU MOVING SLOWER THAN MY INTERNET ON STREAM! WAKE UP! 😭"}`,
+
+    // Sad/Depressed Speed
+    `${analytics.value.done === 0 ? 
+      "bro... this ain't it... you making speed more depressed than when he lost to KSI... 😢" : 
+      "speed was gonna end it all but you actually did something... 💀"}`,
+
+    // Normal/Unhinged Speed
+    `${analytics.value.inProgress ? 
+      "SPEED IS WATCHING YOU! DON'T MAKE ME ACT UP! I'M ACTUALLY INSANE! 🤪" : 
+      "BRO REALLY DOING NOTHING! YOU DUMBER THAN ME IN MATH CLASS! 📚"}`,
+
+    // SUI Mode Speed
+    `${analytics.value.completionRate > 90 ? 
+      "SIUUUUUU! YOU ACTUALLY NOT USELESS! RONALDO WOULD STILL BENCH YOU THO! ⚽️" : 
+      "NOT EVEN MESSI PLAYS THIS BAD! GET YOUR LIFE TOGETHER! 💀"}`,
+
+    // Surprised Speed
+    `${analytics.value.done > 5 ? 
+      "YOOO! WHO'S CONTROLLING YOU?! YOU USUALLY DUMBER THAN A BAG OF ROCKS! 🪨" : 
+      "BRO WHAT?! MY GOLDFISH GOT MORE WORK ETHIC! 🐠"}`,
+
     // Angry Speed reactions (when tasks aren't getting done)
     `BRUHHH ${analytics.value.completionRate < 20 ? 
       `YOU ONLY AT ${analytics.value.completionRate}%?! I'M BOUT TO LOSE IT FR FR! 🤬 GET YO LAZY SELF UP! SEWEY!` : 
@@ -167,26 +202,6 @@ const generateMessage = () => {
     `${analytics.value.highPriority > 0 && analytics.value.inProgress === 0 ? 
       "you see these priority tasks and doing nothing... why you doing this to me bro... 😢" : 
       "THAT'S MORE LIKE IT! KEEP WORKING! 🔥"}`,
-
-    // Very angry Speed reactions
-    `${analytics.value.completionRate < 10 ? 
-      "NAH NAH NAH! THIS AIN'T IT! *SPEED DEMON MODE ACTIVATED* 👿 DO YOUR TASKS OR ELSE!! GRRRRR!" : 
-      "YOU BETTER KEEP WORKING BEFORE I GET MAD FR! 😤"}`,
-
-    // Surprised Speed reactions
-    `${analytics.value.done > analytics.value.total * 0.8 ? 
-      "YOOO! YOU ACTUALLY DID THAT?! I'M SHOOK! 😱 SPEED IS PROUD OF YOU!" : 
-      "BRO WHAT?! HOW YOU STILL NOT DONE?! 😱"}`,
-
-    // SUI Speed reactions
-    `${analytics.value.completionRate > 90 ? 
-      "SIUUUUUUUU! YOU'RE ACTUALLY GOATED! CRISTIANO RONALDO WOULD BE PROUD! ⚽️🐐" : 
-      "NOT QUITE SIUUU WORTHY YET! KEEP PUSHING! ⚽️"}`,
-
-    // Normal Speed encouragement
-    `SPEED CHECKING IN! ${analytics.value.inProgress > 2 ? 
-      "YOU GOING CRAZY WITH THE MULTITASKING! I SEE YOU! 👀" : 
-      "WHY YOU MOVING SO SLOW TODAY?! PICK UP THE PACE! 🏃‍♂️"}`,
 
     // Very angry when high priority tasks pile up
     `${analytics.value.highPriority > 5 ? 
