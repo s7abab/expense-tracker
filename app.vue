@@ -17,9 +17,9 @@
               <v-icon start>mdi-format-list-checks</v-icon>
               Tasks
             </v-tab>
-            <v-tab value="ai" to="/ai-chat">
-              <v-icon start>mdi-robot</v-icon>
-              AI Chat
+            <v-tab value="writing" to="/writing">
+              <v-icon start>mdi-text-box-check</v-icon>
+              Writing
             </v-tab>
           </v-tabs>
         </v-card>
@@ -28,7 +28,7 @@
       </v-container>
       
       <!-- Action Buttons - Only show on finance tab -->
-      <div v-if="!isTasksPage" class="action-buttons-container px-4 py-3">
+      <div v-if="isFinancePage" class="action-buttons-container px-4 py-3">
         <div class="action-buttons-wrapper">
           <v-btn
             class="action-button"
@@ -80,9 +80,20 @@ const isTasksPage = computed(() => {
   return route.path.startsWith('/tasks')
 })
 
+// Check if current page is finance
+const isFinancePage = computed(() => {
+  return route.path === '/'
+})
+
 // Update active tab based on route
 watch(route, (newRoute) => {
-  activeTab.value = newRoute.path.startsWith('/tasks') ? 'tasks' : 'finance'
+  if (newRoute.path.startsWith('/tasks')) {
+    activeTab.value = 'tasks'
+  } else if (newRoute.path.startsWith('/writing')) {
+    activeTab.value = 'writing'
+  } else {
+    activeTab.value = 'finance'
+  }
 })
 
 const openNumpad = (type) => {
