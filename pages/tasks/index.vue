@@ -1,6 +1,7 @@
 <template>
   <div class="tasks-page">
     <v-card class="board-container">
+      <TaskAnalytics :tasks="tasks" />
       <div class="board-wrapper">
         <div 
           v-for="column in columns" 
@@ -169,6 +170,7 @@
 import { ref, computed } from 'vue'
 import draggable from 'vuedraggable'
 import { useTasks } from '../../composables/useTasks'
+import TaskAnalytics from '../../components/TaskAnalytics.vue'
 
 const tasksListRef = ref(null)
 const { tasks, addTask, updateTask } = useTasks()
